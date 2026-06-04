@@ -1,70 +1,38 @@
-# Architecture technique — Néovolt Grid+
+# Architecture - Neovolt Grid+
 
-## Schema
+## Vue d'ensemble
+
+Les donnees brutes (CSV) sont chargees par le pipeline ingestion.py, nettoyees avec pandas, puis stockees dans une base SQLite (neovolt.db). L'API FastAPI lit cette base et expose les donnees via des endpoints REST.
 
 ```
-+---------------------------+
-|   Sources de données      |
-|  (CSV Neovolt : relevés,  |
-|   clients, météo, etc.)   |
-+------------+--------------+
-             |
-             v
-+---------------------------+
-|   ingestion.py            |
-|   - Chargement CSV        |
-|   - Nettoyage pandas      |
-|     (doublons, négatifs,  |
-|      outliers p99)        |
-|   - Stockage SQLite       |
-+------------+--------------+
-             |
-             v
-+---------------------------+
-|   neovolt.db (SQLite)     |
-|   - releves_consommation  |
-|   - clients               |
-|   - compteurs             |
-|   - incidents_reseau      |
-|   - cas_fraude_confirmes  |
-|   - meteo                 |
-|   - journaux_securite     |
-|   - actifs_si             |
-+------------+--------------+
-             |
-             v
-+---------------------------+
-|   API FastAPI (port 8000) |
-|   GET /releves            |  --> Dashboards (Data Analyst)
-|   GET /clients            |  --> Tous les volets
-|   GET /incidents          |  --> Data Analyst, Cybersec
-|   GET /fraudes            |  --> Data Scientist, Cybersec
-|   GET /stats/conso        |  --> Modèle ML (Data Scientist)
-|   GET /meteo              |  --> Modèle ML (Data Scientist)
-|   GET /journaux-securite  |  --> Cybersécurité (SIEM)
-+------------+--------------+
-             |
-             v
-+---------------------------+
-|   Docker Compose          |
-|   - service api           |
-|   - volume neovolt.db     |
-|   - port 8000:8000        |
-+---------------------------+
-
-## Choix techniques
-
-| Composant | Choix prototype | Choix production |
-|-----------|----------------|-----------------|
-| Stockage  | SQLite         | PostgreSQL      |
-| API       | FastAPI        | FastAPI + Nginx |
-| Pipeline  | pandas         | Apache Spark    |
-| Deploy    | Docker Compose | Kubernetes      |
-
-## Sécurité (intégrée à la conception)
-
-- Données personnelles de consommation : sensibles RGPD
-- API sans authentification en prototype → JWT tokens en prod
-- SCADA réseau : isolé, jamais connecté à cette plateforme
-- Logs de sécurité : accessibles uniquement via /journaux-securite (lecture seule)
+CSV (donnees/)
+    |
+    v
+ingestion.py  ->  neovolt.db (SQLite)
+                      |
+                      v
+                  API FastAPI :8000
 ```
+
+## Pourquoi ces choix
+
+**SQLite** : suffisant pour un prototype, pas besoin de configurer un serveur. En production on passerait sur PostgreSQL.
+
+**FastAPI** : genere automatiquement la doc swagger, pratique pour que les autres membres du groupe puissent tester les endpoints.
+
+**Docker** : pour que n'importe qui puisse relancer le projet sans galetere d'installation.
+
+## Tables dans neovolt.db
+
+- releves_consommation
+- clients
+- compteurs
+- incidents_reseau
+- cas_fraude_confirmes
+- meteo
+- journaux_securite
+- actifs_si
+
+## Points RGPD
+
+Les donnees de consommation sont des donnees personnelles. L'API est en lecture seule, sans ecriture possible. En production il faudrait ajouter une authentification (JWT) et du chiffrement.
