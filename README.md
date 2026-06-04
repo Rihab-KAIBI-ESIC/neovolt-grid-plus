@@ -1,48 +1,34 @@
 # neovolt-grid-plus
 
-Plateforme data pour le projet Neovolt - pipeline d'ingestion + API REST
+projet de fin de semestre - plateforme data pour Neovolt
 
-## Comment lancer le projet
+## lancer le projet
 
-### 1. Mettre les CSV dans le dossier donnees/
-
-Les fichiers necessaires : releves_consommation.csv, clients.csv, compteurs.csv, incidents_reseau.csv, cas_fraude_confirmes.csv, meteo.csv, journaux_securite.csv, actifs_si.csv
-
-### 2. Lancer le pipeline
+d'abord copier les csv dans le dossier donnees/ puis :
 
 ```
 pip install -r ingestion/requirements.txt
 python ingestion/ingestion.py
 ```
 
-Ca cree le fichier neovolt.db avec toutes les tables.
-
-### 3. Lancer l'API
+ensuite pour l'api :
 
 ```
 pip install -r api/requirements.txt
 uvicorn api.main:app --reload --port 8000
 ```
 
-L'API tourne sur http://localhost:8000  
-La doc swagger est sur http://localhost:8000/docs
+aller sur http://localhost:8000/docs pour voir tous les endpoints et les tester directement
 
-### 4. Avec Docker
+## avec docker
 
 ```
 python ingestion/ingestion.py
 docker-compose up --build
 ```
 
-## Endpoints
+## endpoints dispo
 
-- GET / 
-- GET /releves
-- GET /clients
-- GET /incidents
-- GET /fraudes
-- GET /stats/conso
-- GET /meteo
-- GET /journaux-securite
+/ , /releves , /clients , /incidents , /fraudes , /stats/conso , /meteo , /journaux-securite
 
-Tous les parametres sont visibles dans le swagger /docs
+les parametres de filtre sont dans le swagger
