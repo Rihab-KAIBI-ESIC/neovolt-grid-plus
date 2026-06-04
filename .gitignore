@@ -1,0 +1,6 @@
+neovolt.db
+donnees/
+__pycache__/
+*.pyc
+*.pyo
+.env
