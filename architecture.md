@@ -1,10 +1,8 @@
 # architecture du projet
 
 le principe est simple : on charge les csv avec le script ingestion.py qui fait le nettoyage (doublons, valeurs negatives, outliers) et stocke tout dans une base sqlite. ensuite l'api fastapi lit cette base et expose les donnees.
-
-```
+ 
 csv -> ingestion.py -> neovolt.db -> api fastapi (port 8000)
-```
 
 j'ai choisi sqlite parce que c'est un prototype et ca evite de configurer un vrai serveur de base de donnees. si on devait passer en prod il faudrait migrer vers postgresql.
 
