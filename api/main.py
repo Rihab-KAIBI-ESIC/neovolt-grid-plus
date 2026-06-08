@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Query, HTTPException
 import sqlite3
 import os
+import math
 import pandas as pd
 
 DB_PATH = os.path.join(os.path.dirname(__file__), "..", "neovolt.db")
@@ -12,6 +13,11 @@ def get_db():
     if not os.path.exists(DB_PATH):
         raise HTTPException(status_code=503, detail="base de donnees introuvable, lancer ingestion.py d'abord")
     return sqlite3.connect(DB_PATH)
+
+
+def df_to_records(df):
+    records = df.to_dict(orient="records")
+    return [{k: (None if isinstance(v, float) and math.isnan(v) else v) for k, v in row.items()} for row in records]
 
 
 @app.get("/")
@@ -34,14 +40,14 @@ def get_releves(
         params.append(zone)
     if date_debut:
         q += " AND date >= ?"
-        params.append(date_debut)
+        params.append(date_debut.strip())
     if date_fin:
         q += " AND date <= ?"
-        params.append(date_fin)
+        params.append(date_fin.strip())
     q += f" LIMIT {limit}"
     df = pd.read_sql_query(q, conn, params=params)
     conn.close()
-    return df.to_dict(orient="records")
+    return df_to_records(df)
 
 
 @app.get("/clients")
@@ -58,7 +64,7 @@ def get_clients(
     q += f" LIMIT {limit}"
     df = pd.read_sql_query(q, conn, params=params)
     conn.close()
-    return df.to_dict(orient="records")
+    return df_to_records(df)
 
 
 @app.get("/incidents")
@@ -79,7 +85,7 @@ def get_incidents(
     q += f" LIMIT {limit}"
     df = pd.read_sql_query(q, conn, params=params)
     conn.close()
-    return df.to_dict(orient="records")
+    return df_to_records(df)
 
 
 @app.get("/fraudes")
@@ -92,7 +98,7 @@ def get_fraudes(type_fraude: str = Query(None)):
         params.append(type_fraude)
     df = pd.read_sql_query(q, conn, params=params)
     conn.close()
-    return df.to_dict(orient="records")
+    return df_to_records(df)
 
 
 @app.get("/stats/conso")
@@ -123,7 +129,7 @@ def get_stats_conso(
 
     df = pd.read_sql_query(q, conn, params=params)
     conn.close()
-    return df.to_dict(orient="records")
+    return df_to_records(df)
 
 
 @app.get("/meteo")
@@ -141,14 +147,14 @@ def get_meteo(
         params.append(zone)
     if date_debut:
         q += " AND date >= ?"
-        params.append(date_debut)
+        params.append(date_debut.strip())
     if date_fin:
         q += " AND date <= ?"
-        params.append(date_fin)
+        params.append(date_fin.strip())
     q += f" LIMIT {limit}"
     df = pd.read_sql_query(q, conn, params=params)
     conn.close()
-    return df.to_dict(orient="records")
+    return df_to_records(df)
 
 
 @app.get("/journaux-securite")
@@ -169,4 +175,4 @@ def get_journaux(
     q += f" LIMIT {limit}"
     df = pd.read_sql_query(q, conn, params=params)
     conn.close()
-    return df.to_dict(orient="records")
+    return df_to_records(df)
